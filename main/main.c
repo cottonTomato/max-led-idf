@@ -9,71 +9,60 @@
 #endif
 
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 0, 0)
-#define HOST    HSPI_HOST
+#define HOST HSPI_HOST
 #else
-#define HOST    SPI2_HOST
+#define HOST SPI2_HOST
 #endif
 
-#define CONFIG_EXAMPLE_CASCADE_SIZE 1
-#define CONFIG_EXAMPLE_PIN_NUM_MOSI 19
-#define CONFIG_EXAMPLE_PIN_NUM_CLK 18
-#define CONFIG_EXAMPLE_PIN_CS 15 
-#define CONFIG_EXAMPLE_SCROLL_DELAY 500
+#define CONFIG_CASCADE_SIZE 1
+#define CONFIG_PIN_NUM_MOSI 23
+#define CONFIG_PIN_NUM_CLK 18
+#define CONFIG_PIN_CS 21
+#define CONFIG_DELAY 500
 
-static const uint64_t symbols[] = {
-    0x383838fe7c381000, // arrows
-    0x10387cfe38383800,
-    0x10307efe7e301000,
-    0x1018fcfefc181000,
-    0x10387cfefeee4400, // heart
-    0x105438ee38541000, // sun
-    0x7e1818181c181800, // digits
-    0x7e060c3060663c00,
-    0x3c66603860663c00,
-    0x30307e3234383000,
-    0x3c6660603e067e00,
-    0x3c66663e06663c00,
-    0x1818183030667e00,
-    0x3c66663c66663c00,
-    0x3c66607c66663c00,
-    0x3c66666e76663c00
-};
-static const size_t symbols_size = sizeof(symbols) - sizeof(uint64_t) * CONFIG_EXAMPLE_CASCADE_SIZE;
+static const uint64_t led1 = 0x001;
+static const uint64_t led2 = 0x010;
+static const uint64_t led3 = 0x011;
+static const uint64_t led4 = 0x100;
 
 void task(void *pvParameter)
 {
     // Configure SPI bus
     spi_bus_config_t cfg = {
-       .mosi_io_num = CONFIG_EXAMPLE_PIN_NUM_MOSI,
-       .miso_io_num = -1,
-       .sclk_io_num = CONFIG_EXAMPLE_PIN_NUM_CLK,
-       .quadwp_io_num = -1,
-       .quadhd_io_num = -1,
-       .max_transfer_sz = 0,
-       .flags = 0
-    };
+        .mosi_io_num = CONFIG_PIN_NUM_MOSI,
+        .miso_io_num = -1,
+        .sclk_io_num = CONFIG_PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 0,
+        .flags = 0};
     ESP_ERROR_CHECK(spi_bus_initialize(HOST, &cfg, 1));
 
     // Configure device
     max7219_t dev = {
-       .cascade_size = CONFIG_EXAMPLE_CASCADE_SIZE,
-       .digits = 0,
-       .mirrored = true
-    };
-    ESP_ERROR_CHECK(max7219_init_desc(&dev, HOST, MAX7219_MAX_CLOCK_SPEED_HZ, CONFIG_EXAMPLE_PIN_CS));
+        .cascade_size = CONFIG_CASCADE_SIZE,
+        .digits = 8,
+        .mirrored = false};
+    ESP_ERROR_CHECK(max7219_init_desc(&dev, HOST, MAX7219_MAX_CLOCK_SPEED_HZ, CONFIG_PIN_CS));
     ESP_ERROR_CHECK(max7219_init(&dev));
 
-    size_t offs = 0;
-    while (1)
+    for (;;)
     {
-        printf("---------- draw\n");
+        printf("LED: 1\n");
+        max7219_draw_image_8x8(&dev, 1, (void*)(&led1));
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
 
-        for (uint8_t c = 0; c < CONFIG_EXAMPLE_CASCADE_SIZE; c ++)
-            max7219_draw_image_8x8(&dev, c * 8, (uint8_t *)symbols + c * 8 + offs);
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_EXAMPLE_SCROLL_DELAY));
+        printf("LED: 2\n");
+        max7219_draw_image_8x8(&dev, 1, (void*)(&led2));
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
 
-        if (++offs == symbols_size)
-            offs = 0;
+        printf("LED: 3\n");
+        max7219_draw_image_8x8(&dev, 1, (void*)(&led3));
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
+
+        printf("LED: 4\n");
+        max7219_draw_image_8x8(&dev, 1, (void*)(&led4));
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
     }
 }
 
