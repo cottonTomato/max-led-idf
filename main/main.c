@@ -20,10 +20,19 @@
 #define CONFIG_PIN_CS 21
 #define CONFIG_DELAY 500
 
-static const uint64_t led1 = 0x001;
-static const uint64_t led2 = 0x010;
-static const uint64_t led3 = 0x011;
-static const uint64_t led4 = 0x100;
+#define LSB_FIRST
+
+#ifdef LSB_FIRST
+static const uint64_t led1 = 0x8000000000000000;
+static const uint64_t led2 = 0x4000000000000000;
+static const uint64_t led3 = 0x0080000000000000;
+static const uint64_t led4 = 0x0040000000000000;
+#else
+static const uint64_t led1 = 0x0000000000000001;
+static const uint64_t led2 = 0x0000000000000002;
+static const uint64_t led3 = 0x0000000000000100;
+static const uint64_t led4 = 0x0000000000000200;
+#endif
 
 void task(void *pvParameter)
 {
@@ -49,19 +58,19 @@ void task(void *pvParameter)
     for (;;)
     {
         printf("LED: 1\n");
-        max7219_draw_image_8x8(&dev, 1, (void*)(&led1));
+        max7219_draw_image_8x8(&dev, 1, (void *)(&led1));
         vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
 
         printf("LED: 2\n");
-        max7219_draw_image_8x8(&dev, 1, (void*)(&led2));
+        max7219_draw_image_8x8(&dev, 1, (void *)(&led2));
         vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
 
         printf("LED: 3\n");
-        max7219_draw_image_8x8(&dev, 1, (void*)(&led3));
+        max7219_draw_image_8x8(&dev, 1, (void *)(&led3));
         vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
 
         printf("LED: 4\n");
-        max7219_draw_image_8x8(&dev, 1, (void*)(&led4));
+        max7219_draw_image_8x8(&dev, 1, (void *)(&led4));
         vTaskDelay(pdMS_TO_TICKS(CONFIG_DELAY));
     }
 }
